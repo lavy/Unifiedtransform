@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Interfaces\SemesterInterface;
 use App\Interfaces\SchoolClassInterface;
-use App\Repositories\AssignedTeacherRepository;
+use App\Repositories\AssignedTeacherRepositoryImpl;
 use App\Repositories\ExamRepository;
 
 class ExamController extends Controller
@@ -46,7 +46,7 @@ class ExamController extends Controller
 
         $exams = $examRepository->getAll($currentSchoolSessionId, $semester_id, $class_id);
 
-        $assignedTeacherRepository = new AssignedTeacherRepository();
+        $assignedTeacherRepository = new AssignedTeacherRepositoryImpl();
 
         $teacher_id = (auth()->user()->role == "teacher")?auth()->user()->id : 0;
 

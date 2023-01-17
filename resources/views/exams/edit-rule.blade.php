@@ -21,7 +21,7 @@
                             <div class="p-3 border bg-light shadow-sm">
                                 <form action="{{route('exam.rule.update')}}" method="POST">
                                     @csrf
-                                    <input type="hidden" name="exam_rule_id" value="{{$exam_rule_id}}">
+                                    <input type="hidden" name="exam_rule_id" value="{{$exam_rule->id}}}">
                                     <div class="mt-2">
                                         <label for="inputTotalMarks" class="form-label">Total Marks<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
                                         <input type="number" class="form-control" id="inputTotalMarks" value="{{$exam_rule->total_marks}}" name="total_marks" step="0.01">

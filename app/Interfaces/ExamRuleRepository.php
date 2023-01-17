@@ -2,7 +2,7 @@
 
 namespace App\Interfaces;
 
-interface ExamRuleInterface {
+interface ExamRuleRepository {
     public function create($request);
 
     public function update($request);

@@ -2,7 +2,7 @@
 
 namespace App\Interfaces;
 
-interface AssignedTeacherInterface {
+interface AssignedTeacherRepository {
     public function assign($request);
 
     public function getTeacherCourses($session_id, $teacher_id, $semester_id);

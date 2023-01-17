@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RoutineStoreRequest;
 use App\Models\Routine;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Repositories\RoutineRepository;
 use App\Interfaces\SchoolClassInterface;
+use Illuminate\Http\Response;
 
 class RoutineController extends Controller
 {
@@ -23,7 +28,7 @@ class RoutineController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function index()
     {
@@ -33,33 +38,29 @@ class RoutineController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function create()
     {
         $current_school_session_id = $this->getSchoolCurrentSession();
-        $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
-
-        $data = [
-            'current_school_session_id' => $current_school_session_id,
-            'classes'                   => $school_classes,
-        ];
-
-        return view('routines.create', $data);
+        return view('routines.create')
+            ->with([
+                'current_school_session_id' => $current_school_session_id,
+                'classes' => $this->schoolClassRepository->getAllBySession($current_school_session_id),
+            ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  RoutineStoreRequest  $request
-     * @return \Illuminate\Http\Response
+     * @param RoutineStoreRequest $request
+     * @return RedirectResponse
      */
     public function store(RoutineStoreRequest $request)
     {
         try {
             $routineRepository = new RoutineRepository();
             $routineRepository->saveRoutine($request->validated());
-
             return back()->with('status', 'Routine save was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
@@ -69,30 +70,26 @@ class RoutineController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \Illuminate\Http\Request  $routine
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $routine
+     * @return Application|Factory|View|Response
      */
     public function show(Request $request)
     {
-        $class_id = $request->query('class_id', 0);
-        $section_id = $request->query('section_id', 0);
-        $current_school_session_id = $this->getSchoolCurrentSession();
+        $classId = $request->query('class_id', 0);
+        $sectionId = $request->query('section_id', 0);
+        $currentSchoolSessionId = $this->getSchoolCurrentSession();
         $routineRepository = new RoutineRepository();
-        $routines = $routineRepository->getAll($class_id, $section_id, $current_school_session_id);
+        $routines = $routineRepository->getAll($classId, $sectionId, $currentSchoolSessionId);
         $routines = $routines->sortBy('weekday')->groupBy('weekday');
-
-        $data = [
-            'routines' => $routines
-        ];
-
-        return view('routines.show', $data);
+        return view('routines.show')
+            ->with(['routines' => $routines]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Routine  $routine
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\Routine $routine
+     * @return Response
      */
     public function edit(Routine $routine)
     {
@@ -102,9 +99,9 @@ class RoutineController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Routine  $routine
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Routine $routine
+     * @return Response
      */
     public function update(Request $request, Routine $routine)
     {
@@ -114,8 +111,8 @@ class RoutineController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Routine  $routine
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\Routine $routine
+     * @return Response
      */
     public function destroy(Routine $routine)
     {

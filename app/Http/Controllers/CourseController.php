@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Interfaces\PromotionRepository;
 use App\Models\Course;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Interfaces\CourseInterface;
 use App\Http\Requests\CourseStoreRequest;
+use Illuminate\Http\Response;
 
 class CourseController extends Controller
 {
@@ -33,7 +38,7 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function index()
     {
@@ -43,7 +48,7 @@ class CourseController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function create()
     {
@@ -54,7 +59,7 @@ class CourseController extends Controller
      * Store a newly created resource in storage.
      *
      * @param CourseStoreRequest $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function store(CourseStoreRequest $request)
     {
@@ -69,7 +74,7 @@ class CourseController extends Controller
     /**
      * Display the specified resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function getStudentCourses(int $studentId)
     {
@@ -87,7 +92,7 @@ class CourseController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  $course_id
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function edit(int $courseId)
     {
@@ -104,8 +109,8 @@ class CourseController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function update(Request $request)
     {
@@ -121,7 +126,7 @@ class CourseController extends Controller
      * Remove the specified resource from storage.
      *
      * @param \App\Models\Course $course
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function destroy(Course $course)
     {

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use App\Interfaces\UserInterface;
 use App\Interfaces\SchoolClassInterface;
@@ -11,6 +14,7 @@ use App\Http\Requests\AttendanceStoreRequest;
 use App\Interfaces\SectionInterface;
 use App\Repositories\AttendanceRepository;
 use App\Traits\SchoolSession;
+use Illuminate\Http\Response;
 
 class AttendanceController extends Controller
 {
@@ -23,12 +27,13 @@ class AttendanceController extends Controller
     protected $userRepository;
 
     public function __construct(
-        UserInterface $userRepository,
+        UserInterface            $userRepository,
         AcademicSettingInterface $academicSettingRepository,
-        SchoolSessionInterface $schoolSessionRepository,
-        SchoolClassInterface $schoolClassRepository,
-        SectionInterface $sectionRepository
-    ) {
+        SchoolSessionInterface   $schoolSessionRepository,
+        SchoolClassInterface     $schoolClassRepository,
+        SectionInterface         $sectionRepository
+    )
+    {
         $this->middleware(['can:view attendances']);
 
         $this->userRepository = $userRepository;
@@ -37,10 +42,11 @@ class AttendanceController extends Controller
         $this->schoolClassRepository = $schoolClassRepository;
         $this->sectionRepository = $sectionRepository;
     }
+
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function index()
     {
@@ -65,17 +71,18 @@ class AttendanceController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @return Application|Factory|View|Response
      */
     public function create(Request $request)
     {
-        if($request->query('class_id') == null){
+        if (is_null($request->query('class_id'))) {
             return abort(404);
         }
-        try{
+
+        try {
             $academic_setting = $this->academicSettingRepository->getAcademicSetting();
-            $current_school_session_id = $this->getSchoolCurrentSession();
+            $current_school_session_id = $request->school_session_id;
 
             $class_id = $request->query('class_id');
             $section_id = $request->query('section_id', 0);
@@ -88,22 +95,21 @@ class AttendanceController extends Controller
 
             $attendanceRepository = new AttendanceRepository();
 
-            if($academic_setting->attendance_type == 'section') {
+            if ($academic_setting->attendance_type == 'section') {
                 $attendance_count = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id)->count();
             } else {
                 $attendance_count = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id)->count();
             }
 
-            $data = [
-                'current_school_session_id' => $current_school_session_id,
-                'academic_setting'  => $academic_setting,
-                'student_list'      => $student_list,
-                'school_class'      => $school_class,
-                'school_section'    => $school_section,
-                'attendance_count'  => $attendance_count,
-            ];
-
-            return view('attendances.take', $data);
+            return view('attendances.take')
+                ->with([
+                    'current_school_session_id' => $current_school_session_id,
+                    'academic_setting' => $academic_setting,
+                    'student_list' => $student_list,
+                    'school_class' => $school_class,
+                    'school_section' => $school_section,
+                    'attendance_count' => $attendance_count,
+                ]);
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
@@ -112,8 +118,8 @@ class AttendanceController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\AttendanceStoreRequest  $request
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\AttendanceStoreRequest $request
+     * @return Response
      */
     public function store(AttendanceStoreRequest $request)
     {
@@ -130,12 +136,12 @@ class AttendanceController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @return Response
      */
     public function show(Request $request)
     {
-        if($request->query('class_id') == null){
+        if ($request->query('class_id') == null) {
             return abort(404);
         }
 
@@ -149,7 +155,7 @@ class AttendanceController extends Controller
 
         try {
             $academic_setting = $this->academicSettingRepository->getAcademicSetting();
-            if($academic_setting->attendance_type == 'section') {
+            if ($academic_setting->attendance_type == 'section') {
                 $attendances = $attendanceRepository->getSectionAttendance($class_id, $section_id, $current_school_session_id);
             } else {
                 $attendances = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id);
@@ -162,8 +168,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function showStudentAttendance($id) {
-        if(auth()->user()->role == "student" && auth()->user()->id != $id) {
+    public function showStudentAttendance($id)
+    {
+        if (auth()->user()->role == "student" && auth()->user()->id != $id) {
             return abort(404);
         }
         $current_school_session_id = $this->getSchoolCurrentSession();
@@ -173,8 +180,8 @@ class AttendanceController extends Controller
         $student = $this->userRepository->findStudent($id);
 
         $data = [
-            'attendances'   => $attendances,
-            'student'       => $student,
+            'attendances' => $attendances,
+            'student' => $student,
         ];
 
         return view('attendances.attendance', $data);

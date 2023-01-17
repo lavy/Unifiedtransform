@@ -3,65 +3,64 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ExamRuleStoreRequest;
+use App\Interfaces\ExamRuleRepository;
 use App\Models\ExamRule;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
-use App\Repositories\ExamRuleRepository;
+use Illuminate\Http\Response;
 
 class ExamRuleController extends Controller
 {
     use SchoolSession;
 
+    private $repository;
+
+    public function __construct(ExamRuleRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     /**
      * Display a listing of the resource.
      *
      * \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function index(Request $request)
     {
-        $currentSchoolSessionId = $this->getSchoolCurrentSession();
+        $currentSchoolSessionId = $request->school_session_id;
         $examId = $request->query('exam_id', 0);
-        $examRuleRepository = new ExamRuleRepository();
-        $examRules = $examRuleRepository->getAll($currentSchoolSessionId, $examId);
-
-        $data = [
-            'exam_rules' => $examRules
-        ];
-        return view('exams.view-rule', $data);
+        return view('exams.view-rule')
+            ->with(['exam_rules' => $this->repository->getAll($currentSchoolSessionId, $examId)]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Application|Factory|View|Response
      */
     public function create(Request $request)
     {
-        $currentSchoolSessionId = $this->getSchoolCurrentSession();
         $examId = $request->query('exam_id');
-
-        $data = [
-            'exam_id' => $examId,
-            'current_school_session_id' => $currentSchoolSessionId,
-        ];
-
-        return view('exams.add-rule', $data);
+        return view('exams.add-rule')
+            ->with(['exam_id' => $examId, 'current_school_session_id' => $request->school_session_id]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  ExamRuleStoreRequest  $request
-     * @return \Illuminate\Http\Response
+     * @param ExamRuleStoreRequest $request
+     * @return RedirectResponse
      */
     public function store(ExamRuleStoreRequest $request)
     {
         try {
-            $examRuleRepository = new ExamRuleRepository();
-            $examRuleRepository->create($request->validated());
-
+            $this->repository->create($request->validated());
             return back()->with('status', 'Exam rule creation was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
@@ -71,8 +70,8 @@ class ExamRuleController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\ExamRule  $examRule
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\ExamRule $examRule
+     * @return Response
      */
     public function show(ExamRule $examRule)
     {
@@ -82,32 +81,25 @@ class ExamRuleController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Application|Factory|View|Response
      */
     public function edit(Request $request)
     {
-        $examRuleRepository = new ExamRuleRepository();
-        $examRule = $examRuleRepository->getById($request->exam_rule_id);
-        $data = [
-            'exam_rule_id'  => $request->exam_rule_id,
-            'exam_rule'     => $examRule,
-        ];
-        return view('exams.edit-rule', $data);
+        return view('exams.edit-rule')
+            ->with(['exam_rule' => $this->repository->getById($request->exam_rule_id)]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function update(Request $request)
     {
         try {
-            $examRuleRepository = new ExamRuleRepository();
-            $examRuleRepository->update($request);
-
+            $this->repository->update($request);
             return back()->with('status', 'Exam rule update was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
@@ -117,8 +109,8 @@ class ExamRuleController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ExamRule  $examRule
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\ExamRule $examRule
+     * @return Response
      */
     public function destroy(ExamRule $examRule)
     {

@@ -2,71 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\AssignmentRepository;
 use App\Models\Assignment;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Http\Requests\StoreFileRequest;
-use App\Repositories\AssignmentRepository;
 
 class AssignmentController extends Controller
 {
-    use SchoolSession;
 
+    private $repository;
+
+    public function __construct(AssignmentRepository $repository)
+    {
+        $this->repository = $repository;
+    }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|\Illuminate\Http\Response
      */
     public function getCourseAssignments(Request $request)
     {
         $courseId = $request->query('course_id', 0);
-        $currentSchoolSessionId = $this->getSchoolCurrentSession();
-        $assignmentRepository = new AssignmentRepository();
-        $assignments = $assignmentRepository->getAssignments($currentSchoolSessionId, $courseId);
-        $data = [
-            'assignments'   => $assignments,
-        ];
-        return view('assignments.index', $data);
+        return view('assignments.index')
+            ->with(['assignments'   => $this->repository->getAssignments($request->school_session_id, $courseId)]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View
      */
     public function create(Request $request)
     {
-        $currentSchoolSessionId = $this->getSchoolCurrentSession();
-        $data = [
-            'current_school_session_id' => $currentSchoolSessionId,
-            'class_id'  => $request->query('class_id', 0),
-            'section_id'  => $request->query('section_id', 0),
-            'course_id'  => $request->query('course_id', 0),
-        ];
-        return view('assignments.create', $data);
+        return view('assignments.create')
+            ->with([
+                'current_school_session_id' => $request->school_session_id,
+                'class_id'  => $request->query('class_id', 0),
+                'section_id'  => $request->query('section_id', 0),
+                'course_id'  => $request->query('course_id', 0),
+            ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StoreFileRequest $request)
     {
-        $validatedRequest = $request->validated();
-        $validatedRequest['class_id'] = $request->class_id;
-        $validatedRequest['section_id'] = $request->section_id;
-        $validatedRequest['course_id'] = $request->course_id;
-        $validatedRequest['semester_id'] = $request->semester_id;
-        $validatedRequest['assignment_name'] = $request->assignment_name;
-        $validatedRequest['session_id'] = $this->getSchoolCurrentSession();
+        $valid = $request->validated();
+        $valid['class_id'] = $request->class_id;
+        $valid['section_id'] = $request->section_id;
+        $valid['course_id'] = $request->course_id;
+        $valid['semester_id'] = $request->semester_id;
+        $valid['assignment_name'] = $request->assignment_name;
+        $valid['session_id'] = $request->school_session_id;
 
         try {
-            $assignmentRepository = new AssignmentRepository();
-            $assignmentRepository->store($validatedRequest);
-
+            $this->repository->store($valid);
             return back()->with('status', 'Creating assignment was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());

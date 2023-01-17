@@ -185,6 +185,9 @@ return [
         App\Providers\PurifySetupProvider::class,
         App\Providers\PromotionServiceProvider::class,
         App\Providers\NoticeServiceProvider::class,
+        App\Providers\AssignedTeacherServiceProvider::class,
+        App\Providers\AssignmentServiceProvider::class,
+        App\Providers\ExamRuleServiceProvider::class,
     ],
 
     /*

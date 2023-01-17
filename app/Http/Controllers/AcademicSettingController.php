@@ -65,32 +65,30 @@ class AcademicSettingController extends Controller
 
         $semesters = $this->semesterRepository->getAll($current_school_session_id);
 
-        $data = [
-            'current_school_session_id' => $current_school_session_id,
-            'latest_school_session_id'  => $latest_school_session->id,
-            'academic_setting'          => $academic_setting,
-            'school_sessions'           => $school_sessions,
-            'school_classes'            => $school_classes,
-            'school_sections'           => $school_sections,
-            'teachers'                  => $teachers,
-            'courses'                   => $courses,
-            'semesters'                 => $semesters,
-        ];
-
-        return view('academics.settings', $data);
+        return view('academics.settings')
+            ->with([
+                'current_school_session_id' => $current_school_session_id,
+                'latest_school_session_id'  => $latest_school_session->id,
+                'academic_setting'          => $academic_setting,
+                'school_sessions'           => $school_sessions,
+                'school_classes'            => $school_classes,
+                'school_sections'           => $school_sections,
+                'teachers'                  => $teachers,
+                'courses'                   => $courses,
+                'semesters'                 => $semesters,
+            ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  AttendanceTypeUpdateRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateAttendanceType(AttendanceTypeUpdateRequest $request)
     {
         try {
             $this->academicSettingRepository->updateAttendanceType($request->validated());
-
             return back()->with('status', 'Attendance type update was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
@@ -100,7 +98,6 @@ class AcademicSettingController extends Controller
     public function updateFinalMarksSubmissionStatus(Request $request) {
         try {
             $this->academicSettingRepository->updateFinalMarksSubmissionStatus($request);
-
             return back()->with('status', 'Final marks submission status update was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());

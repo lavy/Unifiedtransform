@@ -3,63 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Models\Syllabus;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Http\Requests\StoreFileRequest;
 use App\Interfaces\SchoolClassInterface;
 use App\Repositories\SyllabusRepository;
+use Illuminate\Http\Response;
 
 class SyllabusController extends Controller
 {
     use SchoolSession;
 
-    protected $schoolClassRepository;
+    private $schoolClassRepository;
 
-    public function __construct(SchoolClassInterface $schoolClassRepository) {
+    public function __construct(SchoolClassInterface $schoolClassRepository)
+    {
         $this->schoolClassRepository = $schoolClassRepository;
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function index(Request $request)
     {
-        $course_id = $request->query('course_id', 0);
+        $courseId = $request->query('course_id', 0);
         $syllabusRepository = new SyllabusRepository();
-        $syllabi = $syllabusRepository->getByCourse($course_id);
-
-        $data = [
-            'syllabi'   => $syllabi
-        ];
-
-        return view('syllabi.show', $data);
+        $syllabi = $syllabusRepository->getByCourse($courseId);
+        return view('syllabi.show')
+            ->with(['syllabi' => $syllabi]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Application|Factory|View|Response
      */
     public function create()
     {
         $currentSchoolSessionId = $this->getSchoolCurrentSession();
-
-        $school_classes = $this->schoolClassRepository->getAllBySession($currentSchoolSessionId);
-
-        $data = [
-            'current_school_session_id' => $currentSchoolSessionId,
-            'school_classes'    => $school_classes,
-        ];
-        return view('syllabi.create', $data);
+        return view('syllabi.create')
+            ->with([
+                'current_school_session_id' => $currentSchoolSessionId,
+                'school_classes' => $this->schoolClassRepository->getAllBySession($currentSchoolSessionId),
+            ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  StoreFileRequest  $request
-     * @return \Illuminate\Http\Response
+     * @param StoreFileRequest $request
+     * @return RedirectResponse
      */
     public function store(StoreFileRequest $request)
     {
@@ -72,7 +71,6 @@ class SyllabusController extends Controller
         try {
             $syllabusRepository = new SyllabusRepository();
             $syllabusRepository->store($validatedRequest);
-
             return back()->with('status', 'Creating syllabus was successful!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
@@ -82,8 +80,8 @@ class SyllabusController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Syllabus  $syllabus
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\Syllabus $syllabus
+     * @return Response
      */
     public function show(Syllabus $syllabus)
     {
@@ -93,8 +91,8 @@ class SyllabusController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Syllabus  $syllabus
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\Syllabus $syllabus
+     * @return Response
      */
     public function edit(Syllabus $syllabus)
     {
@@ -104,9 +102,9 @@ class SyllabusController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Syllabus  $syllabus
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Syllabus $syllabus
+     * @return Response
      */
     public function update(Request $request, Syllabus $syllabus)
     {
@@ -116,8 +114,8 @@ class SyllabusController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Syllabus  $syllabus
-     * @return \Illuminate\Http\Response
+     * @param \App\Models\Syllabus $syllabus
+     * @return Response
      */
     public function destroy(Syllabus $syllabus)
     {
